@@ -1,9 +1,10 @@
 //method1- promise resolve and catch/reject se
 const asyncHandler = (requestHandler) => {
-  (req, res, next) => {
+  return (req, res, next) => {
     Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err));
   };
 };
+export { asyncHandler };
 
 //method 2 -try/catch
 // const asyncHandler = (fn) => {
@@ -18,4 +19,3 @@ const asyncHandler = (requestHandler) => {
 //     }
 //   };
 // };
-export { asyncHandler };
