@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
-import { Jwt } from "jsonwebtoken";
+import mongoose, { Schema } from "mongoose";
+import Jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 //schema according to the model designed
 const userSchema = new mongoose.Schema(
@@ -35,8 +35,8 @@ const userSchema = new mongoose.Schema(
     },
     watchHistory: [
       {
-        type: mongoose.Scheme.type.objectId,
-        ref: video,
+        type: Schema.Types.ObjectId,
+        ref: "Video",
       },
     ],
     password: {
@@ -54,7 +54,7 @@ userSchema.pre("save", async function (next) {
     //if not modified then return to next otherwise encrypt
     return next();
   }
-  this.password = bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 userSchema.methods.isPasswordCorrect = async function (password) {
