@@ -1,7 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
@@ -246,7 +249,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(200, req.user, "Current user fetched successfully");
+    .json(ApiResponse(200, req.user, "Current user fetched successfully"));
 });
 
 //NOTE:add auth middleware in routes
@@ -255,7 +258,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   if (!fullName || !email) {
     throw new ApiError(400, "All fields are required");
   }
-  const user = User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: { fullName: fullName, email: email },
@@ -280,6 +283,15 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       "Something went wrong during uploading on cloudinary"
     );
   }
+  //deleting prev avatar image
+  const oldAvatarUrl = await User.findById(req.user?._id).select("avatar");
+  if (!oldAvatarUrl) {
+    console.log("No prev avatar found");
+  }
+
+  await deleteFromCloudinary(oldAvatarUrl);
+
+  //updating new url in database
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -307,6 +319,16 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
       "Something went wrong during uploading cover Image  on cloudinary"
     );
   }
+  //deleting prev coverImage
+  const oldCoverImageUrl = await User.findById(req.user?._id).select(
+    "coverImage"
+  );
+  if (!oldCoverImageUrl) {
+    console.log("No prev coverImage found");
+  }
+  await deleteFromCloudinary(oldCoverImageUrl);
+
+  //updating new coverImage in database
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
